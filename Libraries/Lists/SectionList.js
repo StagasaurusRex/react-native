@@ -252,6 +252,12 @@ class SectionList<SectionT: SectionBase<any>> extends React.PureComponent<
     }
   }
 
+  scrollToIndex(params) {
+    if (this._wrapperListRef != null) {
+      this._wrapperListRef.scrollToIndex(params);
+    }
+  }
+
   /**
    * Tells the list an interaction has occurred, which should trigger viewability calculations, e.g.
    * if `waitForInteractions` is true and the user has not scrolled. This is typically called by

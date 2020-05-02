@@ -167,6 +167,10 @@ class VirtualizedSectionList<
     this._listRef.scrollToIndex(toIndexParams);
   }
 
+  scrollToIndex(params) {
+    this._listRef.scrollToIndex(params);
+  }
+
   getListRef(): VirtualizedList {
     return this._listRef;
   }
