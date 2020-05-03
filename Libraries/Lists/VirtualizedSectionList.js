@@ -132,7 +132,7 @@ type DefaultProps = {|
   data: $ReadOnlyArray<Item>,
 |};
 
-type State = {childProps: VirtualizedListProps};
+type State = {sectionCounts: {}; childProps: VirtualizedListProps};
 
 /**
  * Right now this just flattens everything into one list and uses VirtualizedList under the
@@ -142,16 +142,14 @@ type State = {childProps: VirtualizedListProps};
 class VirtualizedSectionList<
   SectionT: SectionBase<any>,
 > extends React.PureComponent<Props<SectionT>, State> {
+
   static defaultProps: DefaultProps = {
     ...VirtualizedList.defaultProps,
     data: [],
   };
 
   scrollToLocation(params: ScrollToLocationParamsType) {
-    let index = params.itemIndex;
-    for (let i = 0; i < params.sectionIndex; i++) {
-      index += this.props.getItemCount(this.props.sections[i].data) + 2;
-    }
+    const index = this.state.sectionCounts[params.sectionIndex]
     let viewOffset = params.viewOffset || 0;
     if (params.itemIndex > 0 && this.props.stickySectionHeadersEnabled) {
       const frame = this._listRef._getFrameMetricsApprox(
@@ -165,10 +163,6 @@ class VirtualizedSectionList<
       index,
     };
     this._listRef.scrollToIndex(toIndexParams);
-  }
-
-  scrollToIndex(params) {
-    this._listRef.scrollToIndex(params);
   }
 
   getListRef(): VirtualizedList {
@@ -187,14 +181,17 @@ class VirtualizedSectionList<
   _computeState(props: Props<SectionT>): State {
     const offset = props.ListHeaderComponent ? 1 : 0;
     const stickyHeaderIndices = [];
-    const itemCount = props.sections
-      ? props.sections.reduce((v, section) => {
-          stickyHeaderIndices.push(v + offset);
-          return v + props.getItemCount(section.data) + 2; // Add two for the section header and footer.
-        }, 0)
-      : 0;
+    let itemCount = 0;
+    const sectionCounts = props.sections ? props.sections.reduce((sum, section, index) => {
+      const sectionCount = props.getItemCount(section.data) + 2; // Add two for the section header and footer.
+      sum[index] = itemCount;
+      stickyHeaderIndices.push(itemCount + offset)
+      itemCount += sectionCount;
+      return sum;
+    }, {}) : 0;
 
     return {
+      sectionCounts,
       childProps: {
         ...props,
         renderItem: this._renderItem,
